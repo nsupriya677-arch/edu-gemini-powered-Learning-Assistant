@@ -17,6 +17,10 @@ import {
   Sparkles,
   CheckCircle2,
   Zap,
+  Terminal,
+  GraduationCap,
+  Search,
+  UploadCloud,
 } from 'lucide-react';
 import { EducationLevel, Subject, AppLanguage, SavedItem, GamificationState } from './types';
 import { Navbar } from './components/Navbar';
@@ -30,6 +34,10 @@ import { StudyPlanTab } from './components/StudyPlanTab';
 import { LearningPathTab } from './components/LearningPathTab';
 import { ResourcesTab } from './components/ResourcesTab';
 import { SimpleTaskHub } from './components/SimpleTaskHub';
+import { CodingAssistanceTab } from './components/CodingAssistanceTab';
+import { ExamPrepTab } from './components/ExamPrepTab';
+import { ResearchAssistanceTab } from './components/ResearchAssistanceTab';
+import { StudyMaterialTab } from './components/StudyMaterialTab';
 import { NotebookModal } from './components/NotebookModal';
 import { ProjectSummaryModal } from './components/ProjectSummaryModal';
 
@@ -40,6 +48,10 @@ type TabType =
   | 'quiz'
   | 'summarize'
   | 'learning_path'
+  | 'coding'
+  | 'exam_prep'
+  | 'material'
+  | 'research'
   | 'resources'
   | 'chat'
   | 'notes'
@@ -56,15 +68,19 @@ interface TabItem {
 const TABS: TabItem[] = [
   // Simple Interface & Real-Time Hub
   { id: 'simple', label: 'Simple Interface', badge: 'Real-Time AI', isCore: true, icon: Zap },
-  // 6 Main System Modules
-  { id: 'ask', label: '1. Question & Answer', badge: 'Core', isCore: true, icon: HelpCircle },
-  { id: 'concept', label: '2. Explanation', badge: 'Core', isCore: true, icon: Lightbulb },
+  // Main Learning Assistance Modules
+  { id: 'ask', label: '1. Q&A Solver', badge: 'Core', isCore: true, icon: HelpCircle },
+  { id: 'concept', label: '2. Concept Explanation', badge: 'Core', isCore: true, icon: Lightbulb },
   { id: 'quiz', label: '3. Quiz Generator', badge: '3 MCQs', isCore: true, icon: Award },
   { id: 'summarize', label: '4. Summarizer', badge: 'Core', isCore: true, icon: FileText },
   { id: 'learning_path', label: '5. Learning Path', badge: 'Roadmap', isCore: true, icon: Compass },
-  { id: 'resources', label: '6. Learning Recommendations', badge: 'Videos & Books', isCore: true, icon: Library },
+  { id: 'coding', label: '6. Coding Tutor', badge: 'Python • JS', isCore: true, icon: Terminal },
+  { id: 'exam_prep', label: '7. Exam Prep', badge: 'High-Yield', isCore: true, icon: GraduationCap },
+  { id: 'material', label: '8. Material Analysis', badge: 'Upload OCR', isCore: true, icon: UploadCloud },
+  { id: 'research', label: '9. Research Assistant', badge: 'Academic', isCore: true, icon: Search },
+  { id: 'resources', label: '10. Recommendations', badge: 'Videos & Books', isCore: true, icon: Library },
   // Extended Study Tools
-  { id: 'chat', label: 'AI Study Tutor', icon: MessageSquare },
+  { id: 'chat', label: 'Interactive AI Chat', icon: MessageSquare },
   { id: 'notes', label: 'Cornell Notes', icon: BookMarked },
   { id: 'study_plan', label: 'Study Timetable', icon: Calendar },
 ];
@@ -297,6 +313,39 @@ export default function App() {
           <LearningPathTab
             educationLevel={educationLevel}
             subject={subject}
+            language={language}
+            onSaveItem={handleSaveItem}
+            onRewardXP={handleRewardXP}
+          />
+        )}
+        {activeTab === 'coding' && (
+          <CodingAssistanceTab
+            educationLevel={educationLevel}
+            language={language}
+            onSaveItem={handleSaveItem}
+            onRewardXP={handleRewardXP}
+          />
+        )}
+        {activeTab === 'exam_prep' && (
+          <ExamPrepTab
+            educationLevel={educationLevel}
+            subject={subject}
+            language={language}
+            onSaveItem={handleSaveItem}
+            onRewardXP={handleRewardXP}
+          />
+        )}
+        {activeTab === 'material' && (
+          <StudyMaterialTab
+            educationLevel={educationLevel}
+            subject={subject}
+            language={language}
+            onSaveItem={handleSaveItem}
+            onRewardXP={handleRewardXP}
+          />
+        )}
+        {activeTab === 'research' && (
+          <ResearchAssistanceTab
             language={language}
             onSaveItem={handleSaveItem}
             onRewardXP={handleRewardXP}

@@ -20,10 +20,19 @@ import {
   Clock,
   Radio,
   Loader2,
+  Mic,
+  MicOff,
+  ShieldCheck,
+  Code2,
 } from 'lucide-react';
 import { EducationLevel, Subject, AppLanguage, ImageAttachment } from '../types';
 import { MarkdownRenderer } from './MarkdownRenderer';
-import { playAudioNarration, stopAudioNarration } from '../utils/audio';
+import {
+  playAudioNarration,
+  stopAudioNarration,
+  startSpeechRecognition,
+  isSpeechRecognitionSupported,
+} from '../utils/audio';
 
 interface SimpleTaskHubProps {
   educationLevel: EducationLevel;
@@ -156,9 +165,42 @@ export const SimpleTaskHub: React.FC<SimpleTaskHubProps> = ({
   const [isCopied, setIsCopied] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const stopListeningRef = useRef<(() => void) | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const outputRef = useRef<HTMLDivElement>(null);
+
+  const handleToggleVoiceInput = () => {
+    if (isListening) {
+      if (stopListeningRef.current) {
+        stopListeningRef.current();
+        stopListeningRef.current = null;
+      }
+      setIsListening(false);
+    } else {
+      if (!isSpeechRecognitionSupported()) {
+        alert('Voice input is not supported by your current browser.');
+        return;
+      }
+
+      setIsListening(true);
+      const stopFn = startSpeechRecognition(
+        (transcript) => {
+          setInputContent((prev) => (prev ? `${prev} ${transcript}` : transcript));
+        },
+        () => {
+          setIsListening(false);
+          stopListeningRef.current = null;
+        },
+        () => {
+          setIsListening(false);
+          stopListeningRef.current = null;
+        }
+      );
+      stopListeningRef.current = stopFn;
+    }
+  };
 
   const activeConfig = TASKS.find((t) => t.id === selectedTask) || TASKS[0];
 
@@ -456,6 +498,28 @@ export const SimpleTaskHub: React.FC<SimpleTaskHubProps> = ({
               <span>Attach Diagram / Photo</span>
             </button>
 
+            <button
+              type="button"
+              onClick={handleToggleVoiceInput}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-medium transition-colors cursor-pointer ${
+                isListening
+                  ? 'bg-rose-950/80 border-rose-500 text-rose-300 animate-pulse'
+                  : 'bg-slate-950 hover:bg-slate-800 border-slate-800 text-slate-300'
+              }`}
+            >
+              {isListening ? (
+                <>
+                  <MicOff className="w-3.5 h-3.5 text-rose-400" />
+                  <span>Listening... (Click to stop)</span>
+                </>
+              ) : (
+                <>
+                  <Mic className="w-3.5 h-3.5 text-indigo-400" />
+                  <span>Voice Input (Speech-to-Text)</span>
+                </>
+              )}
+            </button>
+
             {streamedText && !isStreaming && (
               <button
                 type="button"
@@ -489,6 +553,14 @@ export const SimpleTaskHub: React.FC<SimpleTaskHubProps> = ({
               </>
             )}
           </button>
+        </div>
+
+        {/* Student Safety Footer */}
+        <div className="flex items-center gap-2 pt-2 border-t border-slate-800/60 text-[11px] text-slate-400">
+          <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span>
+            <strong className="text-slate-300">Secure & Student-Friendly Learning:</strong> Pedagogically safe explanations, zero data selling, and ad-free focused study.
+          </span>
         </div>
       </div>
 

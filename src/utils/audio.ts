@@ -101,3 +101,73 @@ export const stopSpeaking = (): void => {
 
 export const playAudioNarration = speakText;
 export const stopAudioNarration = stopSpeaking;
+
+// Web Speech Recognition for Voice-Based Learning Input
+export const isSpeechRecognitionSupported = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  return 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
+};
+
+export const startSpeechRecognition = (
+  onTranscript: (text: string) => void,
+  onEnd?: () => void,
+  onError?: (err: string) => void
+): (() => void) => {
+  if (typeof window === 'undefined') {
+    if (onError) onError('Window not defined');
+    return () => {};
+  }
+
+  const SpeechRecognition =
+    (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+  if (!SpeechRecognition) {
+    if (onError) onError('Speech recognition is not supported in this browser.');
+    return () => {};
+  }
+
+  const recognition = new SpeechRecognition();
+  recognition.continuous = false;
+  recognition.interimResults = true;
+  recognition.lang = 'en-US';
+
+  recognition.onresult = (event: any) => {
+    let interimTranscript = '';
+    let finalTranscript = '';
+
+    for (let i = event.resultIndex; i < event.results.length; ++i) {
+      if (event.results[i].isFinal) {
+        finalTranscript += event.results[i][0].transcript;
+      } else {
+        interimTranscript += event.results[i][0].transcript;
+      }
+    }
+
+    const text = finalTranscript || interimTranscript;
+    if (text) {
+      onTranscript(text);
+    }
+  };
+
+  recognition.onerror = (event: any) => {
+    if (onError) onError(event.error || 'Speech recognition error');
+  };
+
+  recognition.onend = () => {
+    if (onEnd) onEnd();
+  };
+
+  try {
+    recognition.start();
+  } catch (err: any) {
+    if (onError) onError(err.message || 'Could not start voice recognition');
+  }
+
+  return () => {
+    try {
+      recognition.stop();
+    } catch {
+      // ignore
+    }
+  };
+};

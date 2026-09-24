@@ -725,7 +725,229 @@ Ensure all suggestions are real, reputable, and directly relevant to "${topic}".
   }
 });
 
-// 10. Audio Narration / Text-to-Speech via Gemini TTS
+// 10. Coding & Programming Assistance (Debug, Explain, Optimize, Solve, Write Tests)
+app.post('/api/code-assistant', async (req: Request, res: Response) => {
+  try {
+    const {
+      language = 'python',
+      task = 'explain',
+      code = '',
+      problem = '',
+      educationLevel = 'high_school',
+      appLanguage = 'English',
+    } = req.body;
+
+    if (!code && !problem) {
+      return res.status(400).json({ error: 'Code snippet or problem description is required.' });
+    }
+
+    const taskInstructions: Record<string, string> = {
+      debug: 'Find, explain, and fix bugs in this code. Highlight the root cause, provide the corrected code block, and test cases that verify the fix.',
+      explain: 'Provide a clear, pedagogical line-by-line breakdown of how this code works, explaining data structures, memory model, and logic flow.',
+      optimize: 'Analyze time and space complexity in Big-O notation. Provide an optimized algorithmic solution with cleaner time/space efficiency and benchmark comparison.',
+      solve: 'Write a clean, production-grade, well-commented solution for the described algorithmic problem, including edge cases and complexity analysis.',
+      tests: 'Generate comprehensive unit tests covering standard cases, corner cases, null/empty inputs, and boundary conditions.',
+    };
+
+    const instruction = taskInstructions[task] || taskInstructions.explain;
+
+    const prompt = `Programming Language: ${language}
+Task: ${task}
+Student Academic Level: ${educationLevel}
+Instruction: ${instruction}
+
+${problem ? `Problem Description:\n${problem}\n` : ''}
+${code ? `Code Snippet:\n\`\`\`${language}\n${code}\n\`\`\`\n` : ''}
+
+Provide a structured, beautifully formatted response in ${appLanguage}:
+1. **Executive Summary / Quick Answer**: Clear diagnosis or solution summary.
+2. **Corrected or Optimized Code**: Full, clean code snippet with helpful comments.
+3. **Step-by-Step Code Walkthrough**: Detailed explanation of logic and key functions.
+4. **Complexity Analysis**:
+   - Time Complexity: $O(...)$ with justification.
+   - Space Complexity: $O(...)$ with justification.
+5. **Key Takeaways & Best Practices**: 2-3 tips to remember for clean code.`;
+
+    const response = await ai.models.generateContent({
+      model: DEFAULT_MODEL,
+      contents: prompt,
+      config: {
+        systemInstruction: `You are EduGenie's Senior Computer Science & Programming Tutor. Write pristine code, clear algorithmic explanations, and rigorous complexity analysis in ${appLanguage}.`,
+        temperature: 0.3,
+      },
+    });
+
+    return res.json({ result: response.text || 'No response generated.' });
+  } catch (error) {
+    return handleApiError(res, error, 'Failed to process coding query');
+  }
+});
+
+// 11. Exam Preparation (Mock Tests, High-Yield Cheat Sheets, Active Recall Flashcards)
+app.post('/api/exam-prep', async (req: Request, res: Response) => {
+  try {
+    const {
+      examType = 'General Exam',
+      topic = '',
+      mode = 'cheat_sheet',
+      educationLevel = 'high_school',
+      language = 'English',
+    } = req.body;
+
+    if (!topic || typeof topic !== 'string') {
+      return res.status(400).json({ error: 'Topic is required.' });
+    }
+
+    const modePrompts: Record<string, string> = {
+      cheat_sheet: `Create an ultra-high-yield Exam Revision Cheat Sheet for "${topic}" (${examType} Level).
+Include:
+- 📌 **Fundamental Theorems, Laws & Core Formulas** (formatted in clean LaTeX / math blocks)
+- ⚠️ **High-Frequency Traps & Tricky Pitfalls** (where students commonly lose marks)
+- ⏱️ **Exam Shortcuts, Mnemonics & Time-Saving Heuristics**
+- 🎯 **3 High-Probability Exam Questions** with condensed worked answers.`,
+
+      flashcards: `Generate 6 Active Recall Flashcards for "${topic}" (${examType} Level).
+Format each flashcard clearly:
+**Card 1**:
+- **Front (Question / Prompt)**: ...
+- **Back (Answer / Deep Explanation)**: ...
+(Repeat for 6 high-yield cards)`,
+
+      mock_test: `Create a Mini Mock Practice Test for "${topic}" (${examType} Level).
+Include:
+- 1 Conceptual Question
+- 1 Quantitative / Application Problem
+- 1 Multi-step Analytical Question
+Provide detailed marking schemes and rubric answers for each.`,
+
+      strategy: `Provide an actionable Exam Day Strategy & Revision Timeline for "${topic}" (${examType}).
+Include:
+- 72-Hour Final Countdown Checklist
+- Time allocation per question type
+- Psychological anxiety reduction & cognitive peak performance tips.`,
+    };
+
+    const prompt = modePrompts[mode] || modePrompts.cheat_sheet;
+
+    const response = await ai.models.generateContent({
+      model: DEFAULT_MODEL,
+      contents: prompt,
+      config: {
+        systemInstruction: `You are EduGenie's Chief Exam Strategist. You specialize in high-yield preparation, score maximization, and anxiety reduction in ${language}.`,
+        temperature: 0.4,
+      },
+    });
+
+    return res.json({ prepMaterial: response.text || 'No exam prep generated.' });
+  } catch (error) {
+    return handleApiError(res, error, 'Failed to generate exam prep');
+  }
+});
+
+// 12. AI-Based Research Assistance (Literature Review, Hypotheses, Citations, Thesis)
+app.post('/api/research-assistant', async (req: Request, res: Response) => {
+  try {
+    const {
+      topic = '',
+      mode = 'literature_review',
+      academicLevel = 'undergraduate',
+      citationStyle = 'APA 7th',
+      language = 'English',
+    } = req.body;
+
+    if (!topic || typeof topic !== 'string') {
+      return res.status(400).json({ error: 'Research topic or question is required.' });
+    }
+
+    const prompt = `Research Topic / Inquiry: "${topic}"
+Academic Level: ${academicLevel}
+Mode: ${mode}
+Citation Standard: ${citationStyle}
+Language: ${language}
+
+Provide a rigorous academic research brief structured as follows:
+1. **Academic Thesis Statement & Scope Formulation**: A refined, defensible scholarly thesis.
+2. **Key Theoretical Frameworks & Literature Overview**: Core academic schools of thought, seminal debates, and benchmark papers/methodologies.
+3. **Research Questions & Testable Hypotheses**: 2-3 specific, measurable inquiry angles.
+4. **Counter-Arguments & Critical Synthesis**: Major objections or contradictory evidence to anticipate.
+5. **Standard Academic Citations**: Sample formatted citations in ${citationStyle} (including seminal works and contemporary directions).`;
+
+    const response = await ai.models.generateContent({
+      model: DEFAULT_MODEL,
+      contents: prompt,
+      config: {
+        systemInstruction: `You are EduGenie's Academic Research Fellow. You assist students in scholarly synthesis, hypothesis development, and critical literature review in ${language}.`,
+        temperature: 0.4,
+      },
+    });
+
+    return res.json({ researchReport: response.text || 'No research report generated.' });
+  } catch (error) {
+    return handleApiError(res, error, 'Failed to assist research');
+  }
+});
+
+// 13. Study Material Upload & In-Depth Analysis
+app.post('/api/analyze-material', async (req: Request, res: Response) => {
+  try {
+    const {
+      text = '',
+      image,
+      analysisGoal = 'comprehensive',
+      subject = 'General',
+      educationLevel = 'high_school',
+      language = 'English',
+    } = req.body;
+
+    if (!text && !image) {
+      return res.status(400).json({ error: 'Please upload study material text or image.' });
+    }
+
+    const promptText = `Analyze the attached study material (textbook passage, lecture slide, or worksheet).
+Subject Domain: ${subject}
+Student Level: ${educationLevel}
+Goal: ${analysisGoal}
+Language: ${language}
+
+Material Content:
+"""
+${text || 'Please analyze the uploaded document/slide image in detail.'}
+"""
+
+Provide an exhaustive, structured study guide:
+1. **Executive Synthesis**: Core subject, main thesis, and reading level difficulty.
+2. **Key Concepts & Definitions**: Terminology glossary with plain-English definitions.
+3. **Important Formulas, Rules or Theorems**: Key formulas extracted or derived.
+4. **Pedagogical Breakdown**: Deep explanation of the toughest ideas in the material.
+5. **3 Knowledge Check Questions**: Targeted questions with hidden answers to test retention.`;
+
+    const parts: any[] = [];
+    if (image && image.data && image.mimeType) {
+      parts.push({
+        inlineData: {
+          mimeType: image.mimeType,
+          data: image.data,
+        },
+      });
+    }
+    parts.push({ text: promptText });
+
+    const response = await ai.models.generateContent({
+      model: DEFAULT_MODEL,
+      contents: { parts },
+      config: {
+        systemInstruction: `You are EduGenie's Senior Pedagogical Analyst. Extract key academic insights, formulas, and self-checks from uploaded study materials in ${language}.`,
+        temperature: 0.3,
+      },
+    });
+
+    return res.json({ analysis: response.text || 'No analysis generated.' });
+  } catch (error) {
+    return handleApiError(res, error, 'Failed to analyze study material');
+  }
+});
+
+// 14. Audio Narration / Text-to-Speech via Gemini TTS
 app.post('/api/tts', async (req: Request, res: Response) => {
   try {
     const { text, voiceName = 'Puck' } = req.body;

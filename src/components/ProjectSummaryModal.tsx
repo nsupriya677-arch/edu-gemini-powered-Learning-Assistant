@@ -138,29 +138,53 @@ export const ProjectSummaryModal: React.FC<ProjectSummaryModalProps> = ({ isOpen
             </div>
           </div>
 
-          {/* Implemented & Future Enhancements */}
+          {/* Implemented & Active AI-Powered Learning Features */}
           <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Active Enhancements Integrated in EduGenie
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Complete AI-Powered Learning Feature Suite
             </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs text-slate-300">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-xs text-slate-300">
               <div className="flex items-center gap-1.5">
-                <span className="text-emerald-400">✓</span> Voice-based learning (TTS)
+                <span className="text-emerald-400 font-bold">✓</span> Interactive AI Chatbot (Socratic tutor)
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="text-emerald-400">✓</span> Multilingual support (8+ langs)
+                <span className="text-emerald-400 font-bold">✓</span> Personalized Learning (Level & Subject adaptation)
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="text-emerald-400">✓</span> Image & diagram question answering
+                <span className="text-emerald-400 font-bold">✓</span> Notes Summarization (Key bullets & TL;DR)
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="text-emerald-400">✓</span> Progress tracking & study streaks
+                <span className="text-emerald-400 font-bold">✓</span> Quiz & Question Generation (3 MCQs with hints)
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="text-emerald-400">✓</span> Gamification (XP, Levels, Badges)
+                <span className="text-emerald-400 font-bold">✓</span> Exam Preparation (Cheat sheets, mock tests)
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="text-emerald-400">✓</span> Cornell Notes & Flashcards deck
+                <span className="text-emerald-400 font-bold">✓</span> Easy Concept Explanation (ELIF / simple analogies)
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-emerald-400 font-bold">✓</span> Study Material Upload & Analysis (Multimodal OCR)
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-emerald-400 font-bold">✓</span> Personalized Study Plan (Spaced timetables)
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-emerald-400 font-bold">✓</span> Multilingual Support (English, Spanish, French, etc.)
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-emerald-400 font-bold">✓</span> Coding & Programming Assistance (8 languages)
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-emerald-400 font-bold">✓</span> Learning Progress & Feedback (XP, Levels, Badges)
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-emerald-400 font-bold">✓</span> AI-Based Research Assistance (Literature review & citations)
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-emerald-400 font-bold">✓</span> Voice-Based Learning Support (Speech Recognition & TTS)
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-emerald-400 font-bold">✓</span> Secure & Student-Friendly Learning (Safe & ad-free)
               </div>
             </div>
           </div>
