@@ -88,6 +88,136 @@ Provide 2-3 brief, relevant follow-up questions or thought experiments the stude
   }
 });
 
+// Real-Time Streaming AI Responses for all Core Tasks (Server-Sent Events)
+app.post('/api/stream-task', async (req: Request, res: Response) => {
+  try {
+    const {
+      task = 'ask',
+      input = '',
+      subject = 'General',
+      educationLevel = 'high_school',
+      language = 'English',
+      image,
+    } = req.body;
+
+    if (!input && !image) {
+      return res.status(400).json({ error: 'Text input or image is required.' });
+    }
+
+    // Set SSE headers
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders?.();
+
+    let systemInstruction = `You are EduGenie, an intelligent, real-time AI learning assistant. Respond in ${language} for a ${educationLevel} level student. Subject: ${subject}.`;
+    let userPrompt = '';
+
+    if (task === 'ask') {
+      systemInstruction = `You are EduGenie's Academic Problem Solver. Break down questions rigorously and clearly for a ${educationLevel} student. Respond in ${language}.`;
+      userPrompt = `Student Question:
+"""
+${input || 'Please analyze and solve the attached image problem.'}
+"""
+
+Provide a comprehensive, pedagogical response with:
+1. **Direct Answer / Executive Solution**: Clear, upfront answer or thesis.
+2. **Concept & Principles**: Fundamental laws, theorems, or formulas applied.
+3. **Step-by-Step Derivation**: Detailed reasoning with intermediate checkpoints.
+4. **Common Pitfalls & Mistakes**: Where students typically go wrong.
+5. **Quick Verification / Sanity Check**: How to independently check the result.
+6. **Key Takeaway**: 1-2 sentence core rule to remember.`;
+    } else if (task === 'concept') {
+      systemInstruction = `You are EduGenie's Concept Architect. Teach complex ideas with intuitive analogies, mental models, and the Feynman technique in ${language}.`;
+      userPrompt = `Explain the following topic for a ${educationLevel} student:
+Topic: "${input}"
+
+Structure the explanation:
+1. **The Core Intuition**: A vivid, everyday analogy without confusing jargon.
+2. **First-Principles Breakdown**: How it actually works step-by-step.
+3. **Why It Matters**: Practical real-world significance and applications.
+4. **Interactive Knowledge Check**: A quick thought experiment with answer hidden in a markdown block.`;
+    } else if (task === 'quiz') {
+      systemInstruction = `You are EduGenie's Quiz Master. Formulate exactly 3 high-quality multiple choice questions with 4 options (A, B, C, D) in ${language}.`;
+      userPrompt = `Generate 3 interactive MCQs with 4 options based on:
+"${input}"
+
+For each question:
+- State the question clearly.
+- Provide 4 distinct options labeled A), B), C), D).
+- State the correct answer.
+- Provide a helpful hint and a detailed explanation of why the correct option is right.`;
+    } else if (task === 'summarize') {
+      systemInstruction = `You are EduGenie's Executive Academic Summarizer. Distill content into high-retention takeaways in ${language}.`;
+      userPrompt = `Summarize the following educational content concisely for a ${educationLevel} student:
+"""
+${input}
+"""
+
+Include:
+1. **Executive TL;DR**: 2-3 sentence overview.
+2. **Key Takeaways & Core Arguments**: 4-6 bullet points.
+3. **Crucial Terminology**: Key terms defined concisely.
+4. **Actionable Summary / Study Tip**.`;
+    } else if (task === 'learning_path') {
+      systemInstruction = `You are EduGenie's Master Curriculum Designer. Create structured beginner-to-advanced learning roadmaps in ${language}.`;
+      userPrompt = `Design a comprehensive, structured beginner-to-advanced learning path for "${input}".
+Organize into:
+- Stage 1: Beginner Foundations (Prerequisites & Intuition)
+- Stage 2: Intermediate Proficiency (Core Methods & Problem Solving)
+- Stage 3: Advanced Mastery (Complex Systems & Real-World Projects)
+Include milestones, estimated hours, and self-assessment criteria.`;
+    } else if (task === 'resources') {
+      systemInstruction = `You are EduGenie's Academic Resource Advisor. Curate real, authoritative educational resources in ${language}.`;
+      userPrompt = `Suggest curated learning resources for "${input}":
+1. 🎥 **Recommended Educational Videos & YouTube Channels** (e.g., Khan Academy, MIT OCW, 3Blue1Brown, CrashCourse)
+2. 📰 **Articles, Peer-Reviewed Papers & Guides**
+3. 📖 **Essential Textbooks & Reference Books** (Standard & Intuitive)
+4. 🧪 **Interactive Tools, Simulations & Practice Portals**
+5. 🎯 **Suggested Study Sequence**.`;
+    } else {
+      userPrompt = input;
+    }
+
+    const parts: any[] = [];
+    if (image && image.data && image.mimeType) {
+      parts.push({
+        inlineData: {
+          mimeType: image.mimeType,
+          data: image.data,
+        },
+      });
+    }
+    parts.push({ text: userPrompt });
+
+    const responseStream = await ai.models.generateContentStream({
+      model: DEFAULT_MODEL,
+      contents: { parts },
+      config: {
+        systemInstruction,
+        temperature: 0.5,
+      },
+    });
+
+    for await (const chunk of responseStream) {
+      if (chunk.text) {
+        res.write(`data: ${JSON.stringify({ text: chunk.text })}\n\n`);
+      }
+    }
+
+    res.write('data: [DONE]\n\n');
+    res.end();
+  } catch (error) {
+    console.error('[Stream Error]', error);
+    if (!res.headersSent) {
+      return res.status(500).json({ error: 'Streaming failed' });
+    }
+    res.write(`data: ${JSON.stringify({ error: 'Streaming interrupted' })}\n\n`);
+    res.write('data: [DONE]\n\n');
+    res.end();
+  }
+});
+
 // 2. Question & Answer Module (Answers academic & general questions with optional image problem solving)
 app.post('/api/ask-question', async (req: Request, res: Response) => {
   try {
@@ -530,40 +660,68 @@ Respond in ${language}.`;
   }
 });
 
-// 9. Curated Learning Resources
+// 9. Curated Learning Recommendations (Videos, Articles, Books & Interactive Tools)
 app.post('/api/learning-resources', async (req: Request, res: Response) => {
   try {
-    const { topic, subject = 'General', educationLevel = 'high_school', language = 'English' } = req.body;
+    const {
+      topic,
+      resourceType = 'all',
+      subject = 'General',
+      educationLevel = 'high_school',
+      language = 'English',
+    } = req.body;
 
     if (!topic || typeof topic !== 'string') {
       return res.status(400).json({ error: 'Topic is required.' });
     }
 
-    const prompt = `Recommend top-tier, curated learning resources for students studying "${topic}".
+    const prompt = `You are EduGenie's Academic Resource Advisor. Suggest high-quality, trusted learning resources for a student studying "${topic}".
+
 Subject Domain: ${subject}
-Student Level: ${educationLevel}
+Student Academic Level: ${educationLevel}
+Target Resource Focus: ${resourceType}
 Language: ${language}
 
-Organize the recommendations into:
-1. **Free Online Courses & Lectures** (e.g. MIT OpenCourseWare, Khan Academy, Coursera, YouTube educational channels like 3Blue1Brown, CrashCourse, etc.)
-2. **Essential Textbooks & Reference Books** (with author and brief why it is recommended)
-3. **Interactive Tools, Simulations & Visualizers** (e.g. PhET Interactive Simulations, Desmos, GeoGebra, Wolfram, LeetCode, etc.)
-4. **Practice Repositories & Past Papers**
-5. **Key Subtopics & Learning Sequence Roadmap**
-Respond in ${language}.`;
+Provide comprehensive, categorized learning recommendations structured into the following sections:
+
+### 1. 🎥 Recommended Educational Videos & Online Lectures
+- Specific YouTube channels or creators renowned for this topic (e.g., 3Blue1Brown, Khan Academy, MIT OpenCourseWare, CrashCourse, Professor Leonard, StatQuest, Kurzgesagt, etc.).
+- Specific recommended video titles or lecture series to search for.
+- Brief note on why each video/channel is best for this concept.
+
+### 2. 📰 Recommended Articles, Papers & Web Guides
+- Authoritative reference articles, encyclopedias (e.g., Stanford Encyclopedia of Philosophy, Nature Scitable, Britannica, LibreTexts).
+- Peer-reviewed overview papers, open-access journals, or university explainer guides.
+- Documentation or tutorial websites (e.g., MDN, W3Schools, GeeksforGeeks, Paul's Online Math Notes).
+
+### 3. 📖 Essential Books & Textbooks
+- **Standard Benchmark Textbook**: The definitive academic standard textbook with author, edition recommendation, and why it is the gold standard.
+- **Intuitive / Accessible Book**: A reader-friendly or popular-science book that explains the topic with high engagement.
+- Recommended chapters or sections to prioritize.
+
+### 4. 🧪 Interactive Tools, Simulations & Practice Portals
+- Hands-on visualizers (e.g., PhET Interactive Simulations, Desmos, GeoGebra, Wolfram Alpha).
+- Problem repositories, interactive coding or active recall tools (e.g., LeetCode, Brilliant, Project Euler).
+
+### 5. 🎯 Suggested Study Sequence (How to consume these resources)
+- **Step 1 (Warmup & Intuition)**: What video to watch first.
+- **Step 2 (Deep Dive & Rigor)**: What book chapter or article to read.
+- **Step 3 (Consolidation & Practice)**: Which simulation or problem set to solve.
+
+Ensure all suggestions are real, reputable, and directly relevant to "${topic}". Respond in ${language}.`;
 
     const response = await ai.models.generateContent({
       model: DEFAULT_MODEL,
       contents: prompt,
       config: {
-        systemInstruction: `You are EduGenie's Resource Librarian. Curate reputable academic learning materials in ${language}.`,
+        systemInstruction: `You are EduGenie's Chief Learning Resources Advisor. You curate precise, authoritative educational recommendations (videos, articles, books, and interactive tools) in ${language}.`,
         temperature: 0.4,
       },
     });
 
-    return res.json({ resources: response.text || 'No resources generated.' });
+    return res.json({ resources: response.text || 'No recommendations generated.' });
   } catch (error) {
-    return handleApiError(res, error, 'Failed to fetch learning resources');
+    return handleApiError(res, error, 'Failed to fetch learning recommendations');
   }
 });
 

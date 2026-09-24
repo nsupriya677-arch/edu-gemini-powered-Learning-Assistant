@@ -29,19 +29,21 @@ import { QuizTab } from './components/QuizTab';
 import { StudyPlanTab } from './components/StudyPlanTab';
 import { LearningPathTab } from './components/LearningPathTab';
 import { ResourcesTab } from './components/ResourcesTab';
+import { SimpleTaskHub } from './components/SimpleTaskHub';
 import { NotebookModal } from './components/NotebookModal';
 import { ProjectSummaryModal } from './components/ProjectSummaryModal';
 
 type TabType =
+  | 'simple'
   | 'ask'
   | 'concept'
   | 'quiz'
   | 'summarize'
   | 'learning_path'
+  | 'resources'
   | 'chat'
   | 'notes'
-  | 'study_plan'
-  | 'resources';
+  | 'study_plan';
 
 interface TabItem {
   id: TabType;
@@ -52,21 +54,23 @@ interface TabItem {
 }
 
 const TABS: TabItem[] = [
-  // 5 Main Modules from User Specification
+  // Simple Interface & Real-Time Hub
+  { id: 'simple', label: 'Simple Interface', badge: 'Real-Time AI', isCore: true, icon: Zap },
+  // 6 Main System Modules
   { id: 'ask', label: '1. Question & Answer', badge: 'Core', isCore: true, icon: HelpCircle },
   { id: 'concept', label: '2. Explanation', badge: 'Core', isCore: true, icon: Lightbulb },
   { id: 'quiz', label: '3. Quiz Generator', badge: '3 MCQs', isCore: true, icon: Award },
   { id: 'summarize', label: '4. Summarizer', badge: 'Core', isCore: true, icon: FileText },
   { id: 'learning_path', label: '5. Learning Path', badge: 'Roadmap', isCore: true, icon: Compass },
-  // Extended Study Suite
-  { id: 'chat', label: 'AI Chat Tutor', icon: MessageSquare },
+  { id: 'resources', label: '6. Learning Recommendations', badge: 'Videos & Books', isCore: true, icon: Library },
+  // Extended Study Tools
+  { id: 'chat', label: 'AI Study Tutor', icon: MessageSquare },
   { id: 'notes', label: 'Cornell Notes', icon: BookMarked },
   { id: 'study_plan', label: 'Study Timetable', icon: Calendar },
-  { id: 'resources', label: 'Resources Library', icon: Library },
 ];
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<TabType>('ask');
+  const [activeTab, setActiveTab] = useState<TabType>('simple');
   const [educationLevel, setEducationLevel] = useState<EducationLevel>('high_school');
   const [subject, setSubject] = useState<Subject>('General');
   const [language, setLanguage] = useState<AppLanguage>('English');
@@ -221,6 +225,39 @@ export default function App() {
 
       {/* Main Tab Content */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Interactive Task Workflow Status Banner */}
+        <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950/30 to-slate-900 border border-slate-800 shadow-md">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-2">
+              <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-semibold border border-indigo-500/30">
+                Interactive Task Hub
+              </span>
+              <span className="text-slate-300 font-medium">
+                1. Select Task &rarr; 2. Enter Content &rarr; 3. Receive Real-Time Results
+              </span>
+            </div>
+            <div className="flex items-center gap-3 text-slate-400">
+              <span className="flex items-center gap-1.5 text-emerald-400">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                Real-Time Responses
+              </span>
+              <span>•</span>
+              <span className="text-slate-400">Cloud Gemini AI</span>
+              <span>•</span>
+              <span className="text-slate-400">Lightweight Architecture</span>
+            </div>
+          </div>
+        </div>
+
+        {activeTab === 'simple' && (
+          <SimpleTaskHub
+            educationLevel={educationLevel}
+            subject={subject}
+            language={language}
+            onSaveItem={handleSaveItem}
+            onRewardXP={handleRewardXP}
+          />
+        )}
         {activeTab === 'ask' && (
           <AskQuestionTab
             educationLevel={educationLevel}
@@ -292,7 +329,9 @@ export default function App() {
           <ResourcesTab
             educationLevel={educationLevel}
             subject={subject}
+            language={language}
             onSaveItem={handleSaveItem}
+            onRewardXP={handleRewardXP}
           />
         )}
       </main>

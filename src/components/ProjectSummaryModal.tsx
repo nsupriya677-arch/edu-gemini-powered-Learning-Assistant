@@ -95,13 +95,23 @@ export const ProjectSummaryModal: React.FC<ProjectSummaryModalProps> = ({ isOpen
                 </p>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800 md:col-span-2">
+              <div className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800">
                 <div className="flex items-center gap-2 text-cyan-300 font-semibold text-xs mb-1">
                   <Compass className="w-4 h-4" />
                   <span>5. Learning Path</span>
                 </div>
                 <p className="text-xs text-slate-400 leading-relaxed">
                   Creates beginner-to-advanced personalized learning recommendations, organizing study into clear stages (Foundations → Intermediate Problem Solving → Advanced Mastery).
+                </p>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800">
+                <div className="flex items-center gap-2 text-rose-300 font-semibold text-xs mb-1">
+                  <BookOpen className="w-4 h-4" />
+                  <span>6. Learning Recommendations</span>
+                </div>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Suggests useful learning resources including curated video lectures, authoritative articles, benchmark textbooks, and interactive simulations.
                 </p>
               </div>
             </div>
